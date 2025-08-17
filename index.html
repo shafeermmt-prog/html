@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Module 1 – Operational Maturity Survey (19 Questions)</title>
+  <style>
+    :root{--bg:#0b1020;--bg-2:#0e1430;--card:#0f1733;--ink:#e9eefb;--muted:#a9b3ce;--border:#1d274a;--accent:#5aa9ff;--accent-2:#69db7c;--warn:#ff9c9c;--amber:#ffd27a;--chip:#16224a;--shadow:0 10px 30px rgba(0,0,0,.25);--radius:16px}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:linear-gradient(180deg,var(--bg) 0%,var(--bg-2) 100%);min-height:100vh}
+    header{position:sticky;top:0;background:linear-gradient(90deg,#0e1430,#13204a);border-bottom:1px solid var(--border);box-shadow:var(--shadow);z-index:10}
+    .wrap{max-width:1100px;margin:0 auto;padding:20px}
+    header h1{margin:0;font-size:1.45rem}
+    header p{margin:6px 0 0;color:var(--muted)}
+    .statusbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .pill{display:inline-flex;align-items:center;gap:8px;background:#0f1733;border:1px solid var(--border);padding:8px 12px;border-radius:999px;color:var(--muted);font-size:.9rem}
+    .progress{height:12px;background:#0f1733;border:1px solid var(--border);border-radius:999px;overflow:hidden;min-width:220px;flex:1}
+    .bar{height:100%;background:linear-gradient(90deg,var(--accent),#7ad8ff);width:0%;transition:width 0.3s ease}
+    main{padding-bottom:10px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin:14px 0;box-shadow:var(--shadow)}
+    .q-title{font-weight:700;margin:0 0 12px}
+    .badge{display:inline-block;margin-right:6px;padding:2px 8px;border-radius:999px;font-size:.75rem;border:1px solid var(--border);background:#0f1733;color:var(--ink)}
+    .answers{display:grid;grid-template-columns:1fr;gap:10px}
+    @media(min-width:780px){.answers{grid-template-columns:1fr 1fr}}
+    label.answer{display:flex;gap:10px;align-items:flex-start;background:#0f1733;border:1px solid var(--border);padding:12px;border-radius:12px;cursor:pointer;transition:transform .08s ease,border-color .2s ease}
+    label.answer:hover{transform:translateY(-1px);border-color:#294180}
+    label.answer.selected{border-color:var(--accent)}
+    label.answer.disabled{opacity:.6;cursor:not-allowed}
+    label.answer.nf.selected{border-color:var(--warn)}
+    input[type=checkbox]{margin-top:3px;transform:scale(1.15)}
+    .toolbar{margin:20px 0;display:flex;gap:10px;flex-wrap:wrap}
+    button{background:var(--accent);border:none;color:#031220;font-weight:700;padding:10px 16px;border-radius:12px;cursor:pointer;transition:opacity 0.2s ease}
+    button:disabled{opacity:.5;cursor:not-allowed;filter:grayscale(.2)}
+    .secondary{background:#18244b;color:var(--ink);border:1px solid var(--border)}
+    .success{background:linear-gradient(180deg,#6edb84,#40c463)}
+    .results{display:none}
+    .results.show{display:block}
+    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .chip{padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--chip);font-size:.85rem;color:var(--ink)}
+    .status{font-weight:900}
+    .status.fnd{color:#ff6b6b}
+    .status.dev{color:#ffd27a}
+    .status.str{color:#7ad8ff}
+    .status.opt{color:#69db7c}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>Module 1 – Operational Maturity Survey (19 Questions)</h1>
+      <p>Answer all 19 questions. Selecting "Not fulfilled" disables others. Among remaining, only one may be selected.</p>
+      <div class="statusbar">
+        <span class="pill" id="progress-pill">Completed: 0 / 19</span>
+        <span class="pill">Maturity Score: <strong id="score-pill">0%</strong></span>
+        <div class="progress"><div class="bar" id="progress-bar"></div></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap" id="app"></main>
+
+  <section class="wrap">
+    <div class="toolbar">
+      <button id="btn-submit" class="success" disabled>Submit Module 1</button>
+      <button id="btn-reset" class="secondary">Reset</button>
+    </div>
+  </section>
+
+  <section class="wrap results" id="results">
+    <div class="card">
+      <h2 style="margin:0 0 10px">Company Diagnostic Summary</h2>
+      <div>
+        <span class="pill">Maturity: <strong id="r-maturity">—</strong></span>
+        <span class="pill">Status: <strong id="r-status" class="status">—</strong></span>
+        <span class="pill">Red flags: <strong id="r-red">—</strong></span>
+        <span class="pill">Completion: <strong id="r-complete">—</strong></span>
+      </div>
+      <div class="chips" id="r-perpart"></div>
+    </div>
+    <div class="card"><h3 style="margin:0 0 8px">Key Findings</h3><ul id="r-findings" style="margin:0;padding-left:18px"></ul></div>
+    <div class="card"><h3 style="margin:0 0 8px">Narrative</h3><p id="r-story" style="margin:0"></p></div>
+  </section>
+
+  <script>
+    // ================== DATA ==================
+    const QUESTIONS=[
+      {part:"Part 1 – SOP Generator",q:"How do you currently document the way tasks or processes are done?",answers:["We don't document tasks or processes at all (Not fulfilled)","Processes are explained verbally when needed","Basic notes/manuals exist but not updated","Standardized SOPs exist for most functions","Fully documented, updated, and accessible SOPs for all tasks"]},
+      {part:"Part 1 – SOP Generator",q:"Are there any processes that only certain people know how to do?",answers:["Yes, most processes depend on individuals (Not fulfilled)","Some processes are informally shared but undocumented","A few SOPs exist but coverage is partial","Most processes are documented, few knowledge silos remain","All processes documented and knowledge widely shared"]},
+      {part:"Part 1 – SOP Generator",q:"When a new hire joins, how do they learn the ropes?",answers:["No structured onboarding, learning by trial & error (Not fulfilled)","New hires rely on shadowing peers","Some training materials exist, but incomplete","Formal onboarding sessions for key functions","Comprehensive onboarding with SOPs, mentors, and training"]},
+      {part:"Part 2 – Role Clarity Dashboard",q:"How are roles and responsibilities currently assigned?",answers:["No clarity, roles overlap or are undefined (Not fulfilled)","Roles given verbally, without written job descriptions","Job descriptions exist but are outdated","Clear roles documented for most staff","All roles are clearly defined, updated, and aligned with strategy"]},
+      {part:"Part 2 – Role Clarity Dashboard",q:"Are there areas where people are unsure about their duties or decision-making powers?",answers:["Yes, widespread confusion about responsibilities (Not fulfilled)","Some uncertainty in overlapping roles","Most people know their roles, but escalation is unclear","Duties and authority are clear with minor exceptions","Everyone fully understands scope of work and authority limits"]},
+      {part:"Part 3 – Task Ownership Tracker",q:"How do you keep track of tasks once they've been assigned?",answers:["No formal tracking, depends on individuals (Not fulfilled)","Tasks tracked informally through chats/emails","Basic spreadsheets or ad-hoc lists used","Centralized task tracker/project management tool exists","Fully integrated system with reminders and accountability"]},
+      {part:"Part 3 – Task Ownership Tracker",q:"What's the biggest reason tasks get delayed or missed?",answers:["No accountability or ownership (Not fulfilled)","Poor communication or unclear instructions","Lack of deadlines/prioritization","Resource constraints occasionally cause delays","Delays are rare, risks proactively managed"]},
+      {part:"Part 4 – Performance Feedback Loop",q:"How often do you hold review meetings or give feedback?",answers:["No structured reviews or feedback (Not fulfilled)","Feedback is irregular and ad-hoc","Periodic reviews but inconsistent","Monthly or quarterly structured reviews","Regular ongoing feedback supported by formal systems"]},
+      {part:"Part 4 – Performance Feedback Loop",q:"Is feedback mostly formal, informal, or ad-hoc?",answers:["No feedback culture at all (Not fulfilled)","Feedback only in emergencies or issues","Mostly informal conversations","Structured reviews with some informal input","Balanced system with formal + informal continuous feedback"]},
+      {part:"Part 5 – AI Process Auditor",q:"Which part of your workflow feels the slowest or most error-prone?",answers:["We don't track bottlenecks at all (Not fulfilled)","Staff observations only, no analysis","Some data collected but not reviewed regularly","Known bottlenecks addressed occasionally","Continuous monitoring and improvement in place"]},
+      {part:"Part 5 – AI Process Auditor",q:"Are there tasks you wish could be automated or checked automatically?",answers:["We haven't considered automation (Not fulfilled)","Aware of automation needs but no action","Some tools tried but not fully implemented","Partial automation of repetitive tasks","High automation and regular AI/process reviews"]},
+      {part:"Part 6 – KPI Health Check",q:"Which key metrics or KPIs do you monitor regularly?",answers:["No KPIs monitored (Not fulfilled)","Only financial KPIs tracked","Some operational KPIs but inconsistent","Financial + operational KPIs tracked regularly","Balanced scorecard (finance, operations, customer, people)"]},
+      {part:"Part 6 – KPI Health Check",q:"How often do you review them, and in what format?",answers:["No regular KPI reviews (Not fulfilled)","Reviewed occasionally via spreadsheets","Monthly review meetings, mostly static reports","Dashboards reviewed weekly","Real-time dashboard with continuous insights"]},
+      {part:"Part 7 – Smart Action Planner",q:"Who decides the steps after a strategy or idea is approved?",answers:["No structured decision-making (Not fulfilled)","Decisions depend on top management only","Department heads define next steps","Joint leadership involvement with cross-functional input","Structured governance process with clear accountability"]},
+      {part:"Part 7 – Smart Action Planner",q:"How do you ensure those steps are actually completed?",answers:["No follow-up or monitoring (Not fulfilled)","Occasional follow-up by management","Deadlines exist but often missed","Regular check-ins and escalation mechanisms","Task completion systematically tracked with accountability"]},
+      {part:"Part 8 – Revenue Leak Analyzer",q:"Have you spotted recurring situations where you lose revenue or miss opportunities?",answers:["No tracking of revenue leaks (Not fulfilled)","Aware but no structured tracking","Informal tracking of major issues","Periodic analysis of revenue leakage","Continuous monitoring with prevention strategies"]},
+      {part:"Part 8 – Revenue Leak Analyzer",q:"How do you currently track and address these losses?",answers:["We don't track losses (Not fulfilled)","Only react when issues are large","Ad-hoc tracking with spreadsheets","Dedicated team reviews leaks quarterly","Automated system flags & prevents leakages"]},
+      {part:"Part 9 – Benchmarking Assistant",q:"Do you compare your performance, processes, or KPIs to industry standards?",answers:["No benchmarking done (Not fulfilled)","Occasionally look at competitors informally","Some benchmarking studies done irregularly","Regular benchmarking for key metrics","Continuous benchmarking against best-in-class"]},
+      {part:"Part 9 – Benchmarking Assistant",q:"Where do you think you're ahead, and where could you catch up?",answers:["We don't know our position (Not fulfilled)","Some strengths known, but no clarity on weaknesses","Aware of broad areas to improve but no detail","Clear on key strengths and priority gaps","Detailed benchmarking matrix of strengths & gaps"]}
+    ];
+
+    // =============== RENDER QUESTIONS ===============
+    const app=document.getElementById('app');
+    function createQuestion(index,q){
+      const card=document.createElement('div');card.className='card';
+      const title=document.createElement('div');title.className='q-title';
+      title.innerHTML='<span class="badge">'+q.part+'</span> <span class="badge">Q'+(index+1)+'</span><br>'+q.q;
+      const answers=document.createElement('div');answers.className='answers';
+      q.answers.forEach(function(text,i){
+        const id='q'+index+'_a'+i;
+        const label=document.createElement('label');label.className='answer';
+        const cb=document.createElement('input');cb.type='checkbox';cb.id=id;cb.dataset.q=index;cb.dataset.a=i;cb.name='q'+index;
+        const span=document.createElement('span');span.textContent=text;
+        label.appendChild(cb);label.appendChild(span);answers.appendChild(label);
+      });
+      card.appendChild(title);card.appendChild(answers);return card;
+    }
+    QUESTIONS.forEach(function(q,i){ app.appendChild(createQuestion(i,q)); });
+
+    // Cache checkboxes per question (must be AFTER rendering)
+    const QNODES=QUESTIONS.map(function(_,i){ return Array.from(document.querySelectorAll('input[name=q'+i+']')); });
+
+    // =============== SELECTION RULES ===============
+    function refreshAnswerStyles(qIndex){
+      const boxes=QNODES[qIndex]||[];
+      boxes.forEach(function(b,idx){
+        const label=b.closest('label'); if(!label) return;
+        label.classList.toggle('selected', b.checked);
+        label.classList.toggle('disabled', b.disabled);
+        label.classList.toggle('nf', idx===0);
+      });
+    }
+    function syncQuestionState(qIndex){
+      const boxes=QNODES[qIndex]; if(!boxes||!boxes.length) return;
+      const first=boxes[0];
+      if(first.checked){
+        boxes.slice(1).forEach(function(b){ b.checked=false; b.disabled=true; });
+      } else {
+        boxes.slice(1).forEach(function(b){ b.disabled=false; });
+        const checked=boxes.slice(1).filter(function(b){ return b.checked; });
+        if(checked.length>1){
+          const keep=checked[0];
+          boxes.slice(1).forEach(function(b){ if(b!==keep) b.checked=false; });
+        }
+      }
+      refreshAnswerStyles(qIndex);
+    }
+
+    // Delegate changes within app
+    app.addEventListener('change', function(e){
+      const t=e.target;
+      if(!(t instanceof HTMLInputElement)) return;
+      if(!t.matches('input[type=checkbox][name^=q]')) return;
+      const qIndex=Number(t.dataset.q);
+      const aIndex=Number(t.dataset.a);
+      const boxes=QNODES[qIndex]; if(!boxes) return;
+      const first=boxes[0];
+      if(aIndex===0){
+        if(t.checked){ boxes.slice(1).forEach(function(b){ b.checked=false; b.disabled=true; }); }
+        else { boxes.slice(1).forEach(function(b){ b.disabled=false; }); }
+      } else {
+        if(t.checked){ first.checked=false; boxes.slice(1).forEach(function(b){ if(b!==t) b.checked=false; }); }
+      }
+      syncQuestionState(qIndex);
+      updateProgress();
+    });
+
+    // =============== DATA & SCORING ===============
+    function getResponses(){
+      return QUESTIONS.map(function(q,qi){
+        const boxes=QNODES[qi]||[];
+        const selected=boxes.map(function(b,ai){ return b.checked?ai:null; }).filter(function(v){ return v!==null; });
+        return {index:qi+1,part:q.part,question:q.q,selectedIndices:selected,selectedLabels:selected.map(function(i){ return q.answers[i]; })};
+      });
+    }
+    function computeScore(responses){
+      var total=0, max=QUESTIONS.length*4;
+      responses.forEach(function(r){
+        if(r.selectedIndices.indexOf(0)!==-1) return; // not fulfilled gives 0
+        var best=0;
+        r.selectedIndices.forEach(function(v){ if(v>best) best=v; });
+        total += best>0 ? best : 0;
+      });
+      var pct = max===0 ? 0 : Math.round((total/max)*100);
+      return { totalPoints:total, maxPoints:max, percentage:pct };
+    }
+    function analyze(responses){
+      const score=computeScore(responses);
+      const redFlags=responses.filter(function(r){ return r.selectedIndices.indexOf(0)!==-1; }).length;
+      const completion=responses.filter(function(r){ return r.selectedIndices.length>0; }).length;
+      // per section chips
+      const perPart={};
+      responses.forEach(function(r){
+        if(!perPart[r.part]) perPart[r.part]={count:0,points:0,red:0};
+        perPart[r.part].count++;
+        if(r.selectedIndices.indexOf(0)!==-1){ perPart[r.part].red++; }
+        else {
+          var best=0; r.selectedIndices.forEach(function(v){ if(v>best) best=v; });
+          perPart[r.part].points += best>0 ? best : 0;
+        }
+      });
+      Object.keys(perPart).forEach(function(k){ var p=perPart[k]; p.max=p.count*4; p.pct=p.max?Math.round((p.points/p.max)*100):0; });
+      return {score:score, redFlags:redFlags, completion:completion, perPart:perPart};
+    }
+    function gradeFromPct(p){ if(p>=85) return {label:'Optimized',cls:'opt'}; if(p>=70) return {label:'Strong',cls:'str'}; if(p>=50) return {label:'Developing',cls:'dev'}; return {label:'Foundational',cls:'fnd'}; }
+
+    // =============== RESULTS RENDER ===============
+    function renderResults(data){
+      var maturity=document.getElementById('r-maturity');
+      var status=document.getElementById('r-status');
+      var red=document.getElementById('r-red');
+      var complete=document.getElementById('r-complete');
+      var findings=document.getElementById('r-findings');
+      var story=document.getElementById('r-story');
+      var perpart=document.getElementById('r-perpart');
+
+      const score=data.score; const redFlags=data.redFlags; const completion=data.completion; const perPart=data.perPart;
+      const grade=gradeFromPct(score.percentage);
+      maturity.textContent = score.percentage + '%';
+      status.textContent = grade.label; status.className = 'status ' + grade.cls;
+      red.textContent = redFlags; complete.textContent = completion + ' / ' + QUESTIONS.length;
+
+      // per-part chips (safe split without optional chaining)
+      perpart.innerHTML='';
+      Object.keys(perPart).forEach(function(k){
+        var p=perPart[k];
+        var chip=document.createElement('span'); chip.className='chip';
+        // Safe label from "Part X – Name"
+        var parts = k.split('–'); var label = parts.length>1 ? parts[1].trim() : k;
+        chip.textContent = label + ': ' + p.pct + '% (red: ' + p.red + '/' + p.count + ')';
+        perpart.appendChild(chip);
+      });
+
+      // findings (simple for now)
+      findings.innerHTML='';
+      if(redFlags===0 && score.percentage>=85){
+        var li=document.createElement('li'); li.textContent='Practices are consistent and well-embedded across teams.'; findings.appendChild(li);
+      }else{
+        var li2=document.createElement('li'); li2.textContent='Focus improvements on sections showing lower percentages and any Not fulfilled responses.'; findings.appendChild(li2);
+      }
+
+      // Narrative
+      var narrative='';
+      if(grade.label==='Foundational') narrative='Your operation relies on individuals more than systems. Establishing simple, repeatable routines will quickly stabilize performance.';
+      else if(grade.label==='Developing') narrative='Momentum is building, but uneven practices slow execution. Closing the gaps will boost predictability and speed.';
+      else if(grade.label==='Strong') narrative='Strong foundations are in place. Targeted refinements will improve resilience and scale.';
+      else narrative='Practices are mature. Keep fine‑tuning to avoid hidden inefficiencies and sustain your lead.';
+      narrative += ' Red‑flag items identified: ' + redFlags + '.';
+      story.textContent = narrative;
+
+      document.getElementById('results').classList.add('show');
+      document.getElementById('results').scrollIntoView({behavior:'smooth'});
+    }
+
+    // =============== UI PROGRESS ===============
+    function updateProgress(){
+      const responses=getResponses();
+      const answered=responses.filter(function(r){ return r.selectedIndices.length>0; }).length;
+      const score=computeScore(responses);
+      document.getElementById('progress-pill').textContent='Completed: ' + answered + ' / ' + QUESTIONS.length;
+      document.getElementById('score-pill').textContent= score.percentage + '%';
+      document.getElementById('progress-bar').style.width = Math.round((answered/QUESTIONS.length)*100) + '%';
+      document.getElementById('btn-submit').disabled = answered < QUESTIONS.length;
+    }
+
+    // =============== ACTIONS ===============
+    document.getElementById('btn-submit').addEventListener('click', function(){
+      const responses=getResponses();
+      const answered=responses.filter(function(r){ return r.selectedIndices.length>0; }).length;
+      if(answered<QUESTIONS.length){ alert('Please answer all questions before submitting.'); return; }
+      const analysis=analyze(responses);
+      try{ localStorage.setItem('module1Results', JSON.stringify({results:responses})); }catch(e){}
+      renderResults(analysis);
+    });
+    document.getElementById('btn-reset').addEventListener('click', function(){
+      QNODES.flat().forEach(function(cb){ cb.checked=false; cb.disabled=false; });
+      for(var i=0;i<QUESTIONS.length;i++){ refreshAnswerStyles(i); }
+      document.getElementById('results').classList.remove('show');
+      updateProgress();
+      window.scrollTo({top:0,behavior:'smooth'});
+    });
+
+    // =============== INIT ===============
+    for(var i=0;i<QUESTIONS.length;i++){ syncQuestionState(i); }
+    updateProgress();
+  </script>
+</body>
+</html>
