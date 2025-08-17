@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 
+const getGrade = (percentage) => {
+  if (percentage >= 85) return { label: 'Optimized', cls: 'opt' };
+  if (percentage >= 70) return { label: 'Strong', cls: 'str' };
+  if (percentage >= 50) return { label: 'Developing', cls: 'dev' };
+  return { label: 'Foundational', cls: 'fnd' };
+};
+
 const QUESTIONS = [
   {
     part: "Part 1 – SOP Generator",
