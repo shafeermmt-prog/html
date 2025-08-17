@@ -428,13 +428,6 @@ function ResultsDisplay({ analysis }) {
   const { score, redFlags, completion, perPart } = analysis;
   const grade = getGrade(score.percentage);
 
-  const getGrade = (percentage) => {
-    if (percentage >= 85) return { label: 'Optimized', cls: 'opt' };
-    if (percentage >= 70) return { label: 'Strong', cls: 'str' };
-    if (percentage >= 50) return { label: 'Developing', cls: 'dev' };
-    return { label: 'Foundational', cls: 'fnd' };
-  };
-
   const getNarrative = () => {
     let narrative = '';
     if (grade.label === 'Foundational') {
